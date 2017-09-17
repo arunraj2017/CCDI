@@ -1,0 +1,8 @@
+http://www.devops-insight.com/2014/08/websphere-object-cache.html
+
+
+install the cachemonitor ear
+give update
+select add/delete multiple files
+unzip and give the update zip file 
+start the server
