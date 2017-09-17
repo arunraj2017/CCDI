@@ -1,0 +1,996 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Started DAO configuration file for CcdiSelectorDao class -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+	http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
+	<bean id="ccdiDataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName">
+			<value>jdbc/CCDI</value>
+			<!-- <value>jdbc/BPC_CCDI</value>-->
+			</property>
+	</bean>
+	<bean id="ccdiTransactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="ccdiDataSource"></property>
+	</bean>
+
+	<!-- Add this tag to enable annotations transactions -->
+		<tx:annotation-driven transaction-manager="ccdiTransactionManager" />
+	<!--Bean class Uses proprietary API to create oracle.sql.BLOB and oracle.sql.CLOB 
+		instances -->
+	<bean id="lobHandler" class="org.springframework.jdbc.support.lob.OracleLobHandler">
+		<property name="nativeJdbcExtractor" ref="nativeJdbcExtractor" />
+	</bean>
+	<!--Bean class to provides a mechanism for extracting native implementations 
+		of JDBC interfaces from wrapper objects that got returned from connection 
+		pools. -->
+	<!-- <bean id="nativeJdbcExtractor"
+		class="org.springframework.jdbc.support.nativejdbc.WebSphereNativeJdbcExtractor" /> -->
+	
+	<bean id="nativeJdbcExtractor" class="org.springframework.jdbc.support.nativejdbc.CommonsDbcpNativeJdbcExtractor"/>
+	<!--Bean class for getting the Generic or Glossary content from content 
+		repository -->
+	<bean id="ccdiSelectorDao" class="com.bits.ms.ccdi.data.repo.dao.CcdiSelectorDao">
+		<property name="GenericComponentQuery">
+			<value>
+				<![CDATA[
+							SELECT *
+							FROM
+							  (SELECT CMPT.CMPNT_ID AS ComponentId,
+							    CMPT.CNTNT_TXT      AS ContentText,
+							    CMPT.TTL_TXT		AS TitleText,
+							    CMPT.CMPNT_TYPE_CD  AS ComponentType,
+							    cat.ATRB_VAL        AS Cat,
+							    page.ATRB_VAL       AS Page,
+							    cblock.ATRB_VAL     AS Block,
+							    CMPT.CMS_STTS_CD,
+							    CMPT.CDI_STTS_CD,
+							    CMPT.PBLSHD_DT,
+							    CNTXT.VISUAL_ROLE_CD AS VisualRole ,
+							    CNTXT.WBST_ADRS_TXT  AS Website,
+							    CNTXT.LANG_CD        AS Language,
+							    CNTXT.ST_CD          AS State,
+							    CNTXT.CNTY_CD        AS County,
+							    CNTXT.CITY_NM        AS City,
+							    CNTXT.PLAN_TYPE_CD   AS PlanType,
+							    CNTXT.PLAN_YEAR      AS YEAR,
+							    CNTXT.PROD_CD        AS Product,
+							    CNTXT.BRND_CD        AS Brand,
+							    CNTXT.LOB_CD         AS LOB,
+							    CNTXT.VNDR_CD        AS Vendor,
+							    CNTXT.USER_TYPE_CD   AS UserType,
+							    CNTXT.SITE_TYPE_CD   AS SiteType,
+							    CNTXT.PROD_FMLY_CD   AS ProductFamily,
+							    CNTXT.PROV_PLAN_TXT  AS ProviderPlan,
+							    CNTXT.PROV_SPCLTY_CD AS ProviderSpeciality,
+							    CNTXT.CHNL_CD        AS Channel,
+							    CNTXT.CNTXT_ID       AS InstanceId
+							  FROM CMPNT CMPT							  
+							  INNER JOIN Cmpnt_atrb cat
+							  ON CMPT.CMPNT_ID = cat.CMPNT_ID
+							  AND cat.ATRB_NM  = 'category'
+							  AND UPPER(cat.ATRB_VAL) = UPPER(?)
+							  INNER JOIN Cmpnt_atrb page
+							  ON CMPT.CMPNT_ID  = page.CMPNT_ID
+							  AND page.ATRB_NM  = 'page'
+							  AND UPPER(page.ATRB_VAL) = UPPER(?)
+							  INNER JOIN Cmpnt_atrb cblock
+							  ON CMPT.CMPNT_ID           = cblock.CMPNT_ID
+							  AND cblock.ATRB_NM         = 'block'
+							  AND UPPER(cblock.ATRB_VAL)        = UPPER(?)
+							  INNER JOIN CNTXT
+							  ON CMPT.CMPNT_ID = CNTXT.CMPNT_ID
+							   AND (CNTXT.VISUAL_ROLE_CD  = ?
+							  OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+							  AND (CNTXT.ST_CD           = ?
+							  OR CNTXT.ST_CD            IS NULL)
+							  AND (CNTXT.CNTY_CD         = ?
+							  OR CNTXT.CNTY_CD          IS NULL)
+							  AND (CNTXT.CITY_NM         = ?
+							  OR CNTXT.CITY_NM          IS NULL)
+							  AND (CNTXT.PLAN_TYPE_CD    = ?
+							  OR CNTXT.PLAN_TYPE_CD     IS NULL)
+							  AND (CNTXT.PLAN_YEAR       = ?
+							  OR CNTXT.PLAN_YEAR        IS NULL)
+							  AND (CNTXT.PROD_CD         = ?
+							  OR CNTXT.PROD_CD          IS NULL)
+							  AND (CNTXT.BRND_CD         = ?
+							  OR CNTXT.BRND_CD          IS NULL)
+							  AND (CNTXT.WBST_ADRS_TXT   = ?
+							  OR CNTXT.WBST_ADRS_TXT    IS NULL)
+							  AND (CNTXT.LANG_CD         = ?
+							  OR CNTXT.LANG_CD          IS NULL)
+							  AND (CNTXT.VNDR_CD         = ?
+							  OR CNTXT.VNDR_CD          IS NULL)
+							  AND (CNTXT.PROV_SPCLTY_CD  = ?
+							  OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+							  AND (CNTXT.CHNL_CD         = ?
+							  OR CNTXT.CHNL_CD          IS NULL)
+							  AND (CNTXT.EXPIRY_DT      IS NULL
+							  OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+							  AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+							  AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+							  OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+							  AND (CNTXT.LOB_CD          = ?
+							  OR CNTXT.LOB_CD           IS NULL)
+							  AND (CNTXT.USER_TYPE_CD    = ?
+							  OR CNTXT.USER_TYPE_CD     IS NULL)
+							  AND (CNTXT.SITE_TYPE_CD    = ?
+							  OR CNTXT.SITE_TYPE_CD     IS NULL)
+							  AND (CNTXT.PROD_FMLY_CD    = ?
+							  OR CNTXT.PROD_FMLY_CD     IS NULL)
+							  AND (CNTXT.USER_ROLE_CD    = ?
+							  OR CNTXT.USER_ROLE_CD     IS NULL)
+							  AND (CNTXT.ENTTLMNT_CD     = ?
+							  OR CNTXT.ENTTLMNT_CD      IS NULL)
+							  AND (CNTXT.PROV_PLAN_TXT   = ?
+							  OR CNTXT.PROV_PLAN_TXT    IS NULL)
+							  WHERE CMPT.CMPNT_TYPE_CD   = ?
+							  AND CMPT.CDI_STTS_CD       ='PUBLISHED'
+							  AND CMPT.CMS_STTS_CD       ='PUBLISHED'
+							  AND ((PBLSHD_DT           IS NOT NULL
+							  AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+							  OR PBLSHD_DT              IS NULL)							 						 
+							  ORDER BY WBST_ADRS_TXT DESC NULLS LAST,
+							    USER_ROLE_CD DESC NULLS LAST,
+							    ENTTLMNT_CD DESC NULLS LAST,
+							    USER_TYPE_CD DESC NULLS LAST,
+							    VISUAL_ROLE_CD DESC NULLS LAST,
+							    CHNL_CD DESC NULLS LAST,
+							    VNDR_CD DESC NULLS LAST,
+							    LOB_CD DESC NULLS LAST,
+							    ST_CD DESC NULLS LAST,
+							    BRND_CD DESC NULLS LAST,
+							    CNTY_CD DESC NULLS LAST,
+							    CITY_NM DESC NULLS LAST,
+							    PROV_SPCLTY_CD DESC NULLS LAST,
+							    PROD_FMLY_CD DESC NULLS LAST,
+							    PROD_CD DESC NULLS LAST,
+							    PLAN_TYPE_CD DESC NULLS LAST,
+							    PROV_PLAN_TXT DESC NULLS LAST,
+							    PLAN_YEAR DESC NULLS LAST,
+							    PLAN_EFCTV_DT DESC NULLS LAST,
+							    LANG_CD DESC NULLS LAST,
+							    SITE_TYPE_CD DESC NULLS LAST,
+							    EXPIRY_DT DESC NULLS LAST
+							  )
+							WHERE rownum=1
+				 ]]>
+			</value>
+		</property>
+		<property name="GlossaryComponentQuery">
+			<value>
+				<![CDATA[
+                     SELECT *
+						FROM
+						  (SELECT CMPNT.CMPNT_ID AS ComponentId,
+						    CMPNT.CNTNT_TXT      AS ContentText,
+						    CMPNT.TTL_TXT		 AS TitleText,
+						    CMPNT.CMPNT_TYPE_CD  AS ComponentType,
+						    CNTXT.VISUAL_ROLE_CD AS VisualRole ,
+						    CNTXT.WBST_ADRS_TXT  AS Website ,
+						    CNTXT.LANG_CD        AS Language ,
+						    CNTXT.ST_CD          AS State ,
+						    CNTXT.CNTY_CD        AS County ,
+						    CNTXT.CITY_NM        AS City ,
+						    CNTXT.PLAN_TYPE_CD   AS PlanType ,
+						    CNTXT.PLAN_YEAR      AS YEAR ,
+						    CNTXT.PROD_CD        AS Product ,
+						    CNTXT.BRND_CD        AS Brand ,
+						    CNTXT.LOB_CD         AS LOB ,
+						    CNTXT.VNDR_CD        AS Vendor ,
+						    CNTXT.USER_TYPE_CD   AS UserType ,
+						    CNTXT.SITE_TYPE_CD   AS SiteType ,
+						    CNTXT.PROD_FMLY_CD   AS ProductFamily ,
+						    CNTXT.PROV_PLAN_TXT  AS ProviderPlan ,
+						    CNTXT.PROV_SPCLTY_CD AS ProviderSpeciality ,
+						    CNTXT.CHNL_CD        AS Channel ,
+						    CNTXT.CNTXT_ID       AS InstanceId,
+						    term.ATRB_VAL as term
+						  FROM CMPNT CMPNT
+						  INNER JOIN Cmpnt_atrb term
+						  ON CMPNT.CMPNT_ID  = term.CMPNT_ID
+						  AND term.ATRB_NM  = 'term'
+						  AND UPPER(term.ATRB_VAL) = UPPER(?)
+						  INNER JOIN CNTXT CNTXT
+						  ON CNTXT.CMPNT_ID          = CMPNT.CMPNT_ID
+						  AND (CNTXT.VISUAL_ROLE_CD  = ?
+						  OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+						  AND (CNTXT.ST_CD           = ?
+						  OR CNTXT.ST_CD            IS NULL)
+						  AND (CNTXT.CNTY_CD         = ?
+						  OR CNTXT.CNTY_CD          IS NULL)
+						  AND (CNTXT.CITY_NM         = ?
+						  OR CNTXT.CITY_NM          IS NULL)
+						  AND (CNTXT.PLAN_TYPE_CD    = ?
+						  OR CNTXT.PLAN_TYPE_CD     IS NULL)
+						  AND (CNTXT.PLAN_YEAR       = ?
+						  OR CNTXT.PLAN_YEAR        IS NULL)
+						  AND (CNTXT.PROD_CD         = ?
+						  OR CNTXT.PROD_CD          IS NULL )
+						  AND (CNTXT.BRND_CD         = ?
+						  OR CNTXT.BRND_CD          IS NULL)
+						  AND (CNTXT.WBST_ADRS_TXT   = ?
+						  OR CNTXT.WBST_ADRS_TXT    IS NULL)
+						  AND (CNTXT.LANG_CD         = ?
+						  OR CNTXT.LANG_CD          IS NULL)
+						  AND (CNTXT.VNDR_CD         = ?
+						  OR CNTXT.VNDR_CD          IS NULL)
+						  AND (CNTXT.PROV_SPCLTY_CD  = ?
+						  OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+						  AND (CNTXT.CHNL_CD         = ?
+						  OR CNTXT.CHNL_CD          IS NULL)
+						  AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+						  AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+						  OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+						  AND (CNTXT.LOB_CD          = ?
+						  OR CNTXT.LOB_CD           IS NULL)
+						  AND (CNTXT.USER_TYPE_CD    = ?
+						  OR CNTXT.USER_TYPE_CD     IS NULL)
+						  AND (CNTXT.SITE_TYPE_CD    = ?
+						  OR CNTXT.SITE_TYPE_CD     IS NULL)
+						  AND (CNTXT.PROD_FMLY_CD    = ?
+						  OR CNTXT.PROD_FMLY_CD     IS NULL)
+						  AND (CNTXT.EXPIRY_DT      IS NULL
+						  OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+						  AND (CNTXT.USER_ROLE_CD    = ?
+						  OR CNTXT.USER_ROLE_CD     IS NULL)
+						  AND (CNTXT.ENTTLMNT_CD     = ?
+						  OR CNTXT.ENTTLMNT_CD      IS NULL)
+						  AND (CNTXT.PROV_PLAN_TXT   = ?
+						  OR CNTXT.PROV_PLAN_TXT    IS NULL)
+						  
+						  WHERE CMPNT.CMPNT_TYPE_CD    = ?
+						  AND CMPNT.CDI_STTS_CD      ='PUBLISHED'
+						  AND CMPNT.CMS_STTS_CD      ='PUBLISHED'
+						  AND ((PBLSHD_DT           IS NOT NULL
+						  AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+						  OR PBLSHD_DT              IS NULL)						 
+						  ORDER BY WBST_ADRS_TXT DESC NULLS LAST,
+						    USER_ROLE_CD DESC NULLS LAST,
+						    ENTTLMNT_CD DESC NULLS LAST,
+						    USER_TYPE_CD DESC NULLS LAST,
+						    VISUAL_ROLE_CD DESC NULLS LAST,
+						    CHNL_CD DESC NULLS LAST,
+						    VNDR_CD DESC NULLS LAST,
+						    LOB_CD DESC NULLS LAST,
+						    ST_CD DESC NULLS LAST,
+						    BRND_CD DESC NULLS LAST,
+						    CNTY_CD DESC NULLS LAST,
+						    CITY_NM DESC NULLS LAST,
+						    PROV_SPCLTY_CD DESC NULLS LAST,
+						    PROD_FMLY_CD DESC NULLS LAST,
+						    PROD_CD DESC NULLS LAST,
+						    PLAN_TYPE_CD DESC NULLS LAST,
+						    PROV_PLAN_TXT DESC NULLS LAST,
+						    PLAN_YEAR DESC NULLS LAST,
+						    PLAN_EFCTV_DT DESC NULLS LAST,
+						    LANG_CD DESC NULLS LAST,
+						    SITE_TYPE_CD DESC NULLS LAST,
+						    EXPIRY_DT DESC NULLS LAST
+						  )
+						WHERE rownum=1
+
+		 	]]>
+			</value>
+		</property>
+
+
+	</bean>
+	<bean id="ccdiWildcardSelectorDao" class="com.bits.ms.ccdi.data.repo.dao.CcdiWildcardSelectorDao">
+		<property name="GlossaryComponentWildcardQuery">
+			<value>
+				<![CDATA[
+						  SELECT CMPNT.CMPNT_ID    AS ComponentId ,
+						  CMPNT.CMPNT_TYPE_CD    AS ComponentType ,
+						  CMPNT.CNTNT_TXT        AS ContentText ,
+						  CMPNT.TTL_TXT		     AS TitleText,
+						  CNTXT.VISUAL_ROLE_CD   AS VisualRole ,
+						  CNTXT.WBST_ADRS_TXT    AS Website ,
+						  CNTXT.LANG_CD          AS Language ,
+						  CNTXT.ST_CD            AS State ,
+						  CNTXT.CNTY_CD          AS County ,
+						  CNTXT.CITY_NM          AS City ,
+						  CNTXT.PLAN_TYPE_CD     AS PlanType ,
+						  CNTXT.PLAN_YEAR        AS YEAR ,
+						  CNTXT.PROD_CD          AS Product ,
+						  CNTXT.BRND_CD          AS Brand ,
+						  CNTXT.LOB_CD           AS LOB ,
+						  CNTXT.VNDR_CD          AS Vendor ,
+						  CNTXT.USER_TYPE_CD     AS UserType ,
+						  CNTXT.SITE_TYPE_CD     AS SiteType ,
+						  CNTXT.PROD_FMLY_CD     AS ProductFamily ,
+						  CNTXT.PROV_PLAN_TXT    AS ProviderPlan ,
+						  CNTXT.PROV_SPCLTY_CD   AS ProviderSpeciality ,
+						  CNTXT.CHNL_CD          AS Channel ,
+						  CNTXT.CNTXT_ID         AS InstanceId ,
+						  CONT_GLOSSARY.ATRB_NM  AS AttributeName ,
+						  CONT_GLOSSARY.ATRB_VAL AS AttributeValue ,
+						  CONT_GLOSSARY.ATRB_ID  AS AttributeId
+						FROM CMPNT CMPNT
+						INNER JOIN CMPNT_ATRB CONT_GLOSSARY
+						ON(CONT_GLOSSARY.ATRB_NM = 'term'
+						AND CONT_GLOSSARY.ATRB_VAL LIKE ?
+						AND CONT_GLOSSARY.CMPNT_ID = CMPNT.CMPNT_ID)	
+																						
+						INNER JOIN CNTXT CNTXT
+						ON CNTXT.CMPNT_ID          = CMPNT.CMPNT_ID
+						AND (CNTXT.VISUAL_ROLE_CD  = ?
+						OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+						AND (CNTXT.ST_CD           = ?
+						OR CNTXT.ST_CD            IS NULL)
+						AND (CNTXT.CNTY_CD         = ?
+						OR CNTXT.CNTY_CD          IS NULL)
+						AND (CNTXT.CITY_NM         = ?
+						OR CNTXT.CITY_NM          IS NULL)
+						AND (CNTXT.PLAN_TYPE_CD    = ?
+						OR CNTXT.PLAN_TYPE_CD     IS NULL)
+						AND (CNTXT.PLAN_YEAR       = ?
+						OR CNTXT.PLAN_YEAR        IS NULL)
+						AND (CNTXT.PROD_CD         = ?
+						OR CNTXT.PROD_CD          IS NULL )
+						AND (CNTXT.BRND_CD         = ?
+						OR CNTXT.BRND_CD          IS NULL)
+						AND (CNTXT.WBST_ADRS_TXT   = ? )
+						AND (CNTXT.LANG_CD         = ?
+						OR CNTXT.LANG_CD          IS NULL)
+						AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+						AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+						OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+						AND (CNTXT.CHNL_CD         = ?
+						OR CNTXT.CHNL_CD          IS NULL)
+						AND (CNTXT.VNDR_CD         = ?
+						OR CNTXT.VNDR_CD          IS NULL)
+						AND (CNTXT.PROV_SPCLTY_CD  = ?
+						OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+						AND (CNTXT.LOB_CD          = ?
+						OR CNTXT.LOB_CD           IS NULL)
+						AND (CNTXT.USER_TYPE_CD    = ?
+						OR CNTXT.USER_TYPE_CD     IS NULL)
+						AND (CNTXT.SITE_TYPE_CD    = ?
+						OR CNTXT.SITE_TYPE_CD     IS NULL)
+						AND (CNTXT.PROD_FMLY_CD    = ?
+						OR CNTXT.PROD_FMLY_CD     IS NULL)
+						AND (CNTXT.EXPIRY_DT      IS NULL
+						OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+						AND (CNTXT.USER_ROLE_CD    = ?
+						OR CNTXT.USER_ROLE_CD     IS NULL)
+						AND (CNTXT.ENTTLMNT_CD     = ?
+						OR CNTXT.ENTTLMNT_CD      IS NULL)
+						AND (CNTXT.PROV_PLAN_TXT   = ?
+						OR CNTXT.PROV_PLAN_TXT    IS NULL)
+						
+						WHERE  CMPNT.CMPNT_TYPE_CD    = ?
+						AND CMPNT.CDI_STTS_CD      ='PUBLISHED'
+						AND CMPNT.CMS_STTS_CD      ='PUBLISHED'
+						AND ((PBLSHD_DT           IS NOT NULL
+						AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+						OR PBLSHD_DT              IS NULL)
+						ORDER BY CONT_GLOSSARY.ATRB_VAL ASC 	
+														
+		 	]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="componentSelectorDao" class="com.bits.ms.ccdi.data.repo.dao.ComponentSelectorDao">
+
+		<property name="PropertyComponentQuery">
+			<value>
+				<![CDATA[
+				SELECT *
+					FROM
+					  (SELECT CMPNT.CMPNT_ID AS ComponentId,
+					    CMPNT.CNTNT_TXT      AS ContextText,
+					    CMPNT.TTL_TXT		 AS TitleText,
+					    CMPNT.CMPNT_TYPE_CD  AS ComponentType,
+					    CNTXT.VISUAL_ROLE_CD AS VisualRole ,
+					    CNTXT.WBST_ADRS_TXT  AS Website ,
+					    CNTXT.LANG_CD        AS Language ,
+					    CNTXT.ST_CD          AS State ,
+					    CNTXT.CNTY_CD        AS County ,
+					    CNTXT.CITY_NM        AS City ,
+					    CNTXT.PLAN_TYPE_CD   AS PlanType ,
+					    CNTXT.PLAN_YEAR      AS YEAR ,
+					    CNTXT.PROD_CD        AS Product ,
+					    CNTXT.BRND_CD        AS Brand ,
+					    CNTXT.LOB_CD         AS LOB ,
+					    CNTXT.CHNL_CD        AS Channel ,
+					    CNTXT.VNDR_CD        AS Vendor ,
+					    CNTXT.USER_TYPE_CD   AS UserType ,
+					    CNTXT.SITE_TYPE_CD   AS SiteType ,
+					    CNTXT.PROD_FMLY_CD   AS ProductFamily ,
+					    CNTXT.PROV_PLAN_TXT  AS ProviderPlan ,
+					    CNTXT.CNTXT_ID       AS InstanceId ,
+					    CNTXT.PROV_SPCLTY_CD AS ProviderSpeciality ,
+					    'name'               AS AttributeName ,
+					    cmpnt_name.ATRB_VAL  AS AttributeValue
+					  FROM CMPNT CMPNT
+					  
+					  INNER JOIN Cmpnt_atrb cmpnt_name
+					  ON CMPNT.CMPNT_ID      = cmpnt_name.CMPNT_ID
+					  AND cmpnt_name.ATRB_NM = 'name'
+					  AND UPPER(cmpnt_name.ATRB_VAL) = UPPER(?)
+					  
+					  INNER JOIN CNTXT CNTXT
+					  ON CNTXT.CMPNT_ID          = CMPNT.CMPNT_ID					  					  
+					  AND (CNTXT.VISUAL_ROLE_CD  = ?
+					  OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+					  AND (CNTXT.ST_CD           = ?
+					  OR CNTXT.ST_CD            IS NULL)
+					  AND (CNTXT.CNTY_CD         = ?
+					  OR CNTXT.CNTY_CD          IS NULL)
+					  AND (CNTXT.CITY_NM         = ?
+					  OR CNTXT.CITY_NM          IS NULL)
+					  AND (CNTXT.PLAN_TYPE_CD    = ?
+					  OR CNTXT.PLAN_TYPE_CD     IS NULL)
+					  AND (CNTXT.PLAN_YEAR       = ?
+					  OR CNTXT.PLAN_YEAR        IS NULL)
+					  AND (CNTXT.PROD_CD         = ?
+					  OR CNTXT.PROD_CD          IS NULL )
+					  AND (CNTXT.BRND_CD         = ?
+					  OR CNTXT.BRND_CD          IS NULL)
+					  AND (CNTXT.WBST_ADRS_TXT   = ?
+					  OR CNTXT.WBST_ADRS_TXT    IS NULL)
+					  AND (CNTXT.LANG_CD         = ?
+					  OR CNTXT.LANG_CD          IS NULL)
+					  AND (CNTXT.LOB_CD          = ?
+					  OR CNTXT.LOB_CD           IS NULL)
+					  AND (CNTXT.CHNL_CD         = ?
+					  OR CNTXT.CHNL_CD          IS NULL)
+					  AND (CNTXT.VNDR_CD         = ?
+					  OR CNTXT.VNDR_CD          IS NULL)
+					  AND (CNTXT.USER_TYPE_CD    = ?
+					  OR CNTXT.USER_TYPE_CD     IS NULL)
+					  AND (CNTXT.PROV_SPCLTY_CD  = ?
+					  OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+					  AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+					  AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+					  OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+					  AND (CNTXT.SITE_TYPE_CD    = ?
+					  OR CNTXT.SITE_TYPE_CD     IS NULL)
+					  AND (CNTXT.PROD_FMLY_CD    = ?
+					  OR CNTXT.PROD_FMLY_CD     IS NULL)
+					  AND (CNTXT.EXPIRY_DT      IS NULL
+					  OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+					  AND (CNTXT.USER_ROLE_CD    = ?
+					  OR CNTXT.USER_ROLE_CD     IS NULL)
+					  AND (CNTXT.ENTTLMNT_CD     = ?
+					  OR CNTXT.ENTTLMNT_CD      IS NULL)
+					  AND (CNTXT.PROV_PLAN_TXT   = ?
+					  OR CNTXT.PROV_PLAN_TXT    IS NULL)
+					  
+					  WHERE CMPNT.CMPNT_TYPE_CD    = 'PROPERTY'
+					  AND CMPNT.CDI_STTS_CD      ='PUBLISHED'
+					  AND CMPNT.CMS_STTS_CD      ='PUBLISHED'
+					  AND ((PBLSHD_DT           IS NOT NULL
+					  AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+					  OR PBLSHD_DT              IS NULL)
+					  
+					  ORDER BY WBST_ADRS_TXT DESC NULLS LAST,
+					    USER_ROLE_CD DESC NULLS LAST,
+					    ENTTLMNT_CD DESC NULLS LAST,
+					    USER_TYPE_CD DESC NULLS LAST,
+					    VISUAL_ROLE_CD DESC NULLS LAST,
+					    CHNL_CD DESC NULLS LAST,
+					    VNDR_CD DESC NULLS LAST,
+					    LOB_CD DESC NULLS LAST,
+					    ST_CD DESC NULLS LAST,
+					    BRND_CD DESC NULLS LAST,
+					    CNTY_CD DESC NULLS LAST,
+					    CITY_NM DESC NULLS LAST,
+					    PROV_SPCLTY_CD DESC NULLS LAST,
+					    PROD_FMLY_CD DESC NULLS LAST,
+					    PROD_CD DESC NULLS LAST,
+					    PLAN_TYPE_CD DESC NULLS LAST,
+					    PROV_PLAN_TXT DESC NULLS LAST,
+					    PLAN_YEAR DESC NULLS LAST,
+					    PLAN_EFCTV_DT DESC NULLS LAST,
+					    LANG_CD DESC NULLS LAST,
+					    SITE_TYPE_CD DESC NULLS LAST,
+					    EXPIRY_DT DESC NULLS LAST
+					  )
+					WHERE ROWNUM=1
+				 ]]>
+			</value>
+		</property>
+		<property name="GatewayComponentQuery">
+			<value>
+				<![CDATA[
+						SELECT *
+							FROM
+							  (SELECT CMPT.CMPNT_ID AS ComponentId,
+							    CMPT.CNTNT_TXT      AS ContextText,
+							    CMPT.TTL_TXT   	 AS TitleText,
+							    CMPT.CMPNT_TYPE_CD   AS ComponentType,
+							    CNTXT.VISUAL_ROLE_CD AS VisualRole ,
+							    CNTXT.WBST_ADRS_TXT  AS Website ,
+							    CNTXT.LANG_CD        AS Language ,
+							    CNTXT.ST_CD          AS State ,
+							    CNTXT.CNTY_CD        AS County ,
+							    CNTXT.CITY_NM        AS City ,
+							    CNTXT.PLAN_TYPE_CD   AS PlanType ,
+							    CNTXT.PLAN_YEAR      AS YEAR ,
+							    CNTXT.PROD_CD        AS Product ,
+							    CNTXT.BRND_CD        AS Brand ,
+							    CNTXT.LOB_CD         AS LOB ,
+							    CNTXT.CHNL_CD        AS Channel ,
+							    CNTXT.VNDR_CD        AS Vendor ,
+							    CNTXT.USER_TYPE_CD   AS UserType ,
+							    CNTXT.SITE_TYPE_CD   AS SiteType ,
+							    CNTXT.PROD_FMLY_CD   AS ProductFamily ,
+							    CNTXT.PROV_PLAN_TXT  AS ProviderPlan ,
+							    CNTXT.CNTXT_ID       AS InstanceId ,
+							    CNTXT.PROV_SPCLTY_CD AS ProviderSpeciality ,
+							    'action'             AS AttributeName ,
+							    cmpnt_name.ATRB_VAL               AS AttributeValue
+							  FROM CMPNT CMPT
+							  INNER JOIN Cmpnt_atrb cmpnt_name
+							  ON CMPT.CMPNT_ID      = cmpnt_name.CMPNT_ID
+							  AND cmpnt_name.ATRB_NM = 'action'
+							  AND UPPER(cmpnt_name.ATRB_VAL) = UPPER(?) 
+							  
+							  INNER JOIN CNTXT CNTXT
+							  ON CNTXT.CMPNT_ID          = CMPT.CMPNT_ID
+							  AND (CNTXT.VISUAL_ROLE_CD  = ?
+							  OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+							  AND (CNTXT.ST_CD           = ?
+							  OR CNTXT.ST_CD            IS NULL)
+							  AND (CNTXT.CNTY_CD         = ?
+							  OR CNTXT.CNTY_CD          IS NULL)
+							  AND (CNTXT.CITY_NM         = ?
+							  OR CNTXT.CITY_NM          IS NULL)
+							  AND (CNTXT.PLAN_TYPE_CD    = ?
+							  OR CNTXT.PLAN_TYPE_CD     IS NULL)
+							  AND (CNTXT.PLAN_YEAR       = ?
+							  OR CNTXT.PLAN_YEAR        IS NULL)
+							  AND (CNTXT.PROD_CD         = ?
+							  OR CNTXT.PROD_CD          IS NULL )
+							  AND (CNTXT.BRND_CD         = ?
+							  OR CNTXT.BRND_CD          IS NULL)
+							  AND (CNTXT.WBST_ADRS_TXT   = ? )
+							  AND (CNTXT.LANG_CD         = ?
+							  OR CNTXT.LANG_CD          IS NULL)
+							  AND (CNTXT.LOB_CD          = ?
+							  OR CNTXT.LOB_CD           IS NULL)
+							  AND (CNTXT.CHNL_CD         = ?
+							  OR CNTXT.CHNL_CD          IS NULL)
+							  AND (CNTXT.VNDR_CD         = ?
+							  OR CNTXT.VNDR_CD          IS NULL)
+							  AND (CNTXT.USER_TYPE_CD    = ?
+							  OR CNTXT.USER_TYPE_CD     IS NULL)
+							  AND (CNTXT.PROV_SPCLTY_CD  = ?
+							  OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+							  AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+							  AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+							  OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+							  AND (CNTXT.SITE_TYPE_CD    = ?
+							  OR CNTXT.SITE_TYPE_CD     IS NULL)
+							  AND (CNTXT.PROD_FMLY_CD    = ?
+							  OR CNTXT.PROD_FMLY_CD     IS NULL)
+							  AND (CNTXT.EXPIRY_DT      IS NULL
+							  OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+							  AND (CNTXT.USER_ROLE_CD    = ?
+							  OR CNTXT.USER_ROLE_CD     IS NULL)
+							  AND (CNTXT.ENTTLMNT_CD     = ?
+							  OR CNTXT.ENTTLMNT_CD      IS NULL)
+							  AND (CNTXT.PROV_PLAN_TXT   = ?
+							  OR CNTXT.PROV_PLAN_TXT    IS NULL)
+							  
+							  WHERE CMPT.CMPNT_TYPE_CD    = 'GATEWAY'
+							  AND CMPT.CDI_STTS_CD      ='PUBLISHED'
+							  AND CMPT.CMS_STTS_CD      ='PUBLISHED'
+							  AND ((PBLSHD_DT           IS NOT NULL
+							  AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+							  OR PBLSHD_DT              IS NULL)
+							  
+							  ORDER BY WBST_ADRS_TXT DESC NULLS LAST,
+							    USER_ROLE_CD DESC NULLS LAST,
+							    ENTTLMNT_CD DESC NULLS LAST,
+							    USER_TYPE_CD DESC NULLS LAST,
+							    VISUAL_ROLE_CD DESC NULLS LAST,
+							    CHNL_CD DESC NULLS LAST,
+							    VNDR_CD DESC NULLS LAST,
+							    LOB_CD DESC NULLS LAST,
+							    ST_CD DESC NULLS LAST,
+							    BRND_CD DESC NULLS LAST,
+							    CNTY_CD DESC NULLS LAST,
+							    CITY_NM DESC NULLS LAST,
+							    PROV_SPCLTY_CD DESC NULLS LAST,
+							    PROD_FMLY_CD DESC NULLS LAST,
+							    PROD_CD DESC NULLS LAST,
+							    PLAN_TYPE_CD DESC NULLS LAST,
+							    PROV_PLAN_TXT DESC NULLS LAST,
+							    PLAN_YEAR DESC NULLS LAST,
+							    PLAN_EFCTV_DT DESC NULLS LAST,
+							    LANG_CD DESC NULLS LAST,
+							    SITE_TYPE_CD DESC NULLS LAST,
+							    EXPIRY_DT DESC NULLS LAST
+							  )
+							WHERE rownum=1	 
+				 ]]>
+			</value>
+		</property>
+		<property name="EnvironmentComponentQuery">
+			<value>
+				<![CDATA[
+					SELECT *
+						FROM
+						  (SELECT CMPT.CMPNT_ID  AS ComponentId,
+						    CMPT.CNTNT_TXT       AS ContextText,
+						    CMPT.TTL_TXT		 AS TitleText,
+						    CMPT.CMPNT_TYPE_CD   AS ComponentType,
+						    CNTXT.VISUAL_ROLE_CD AS VisualRole ,
+						    CNTXT.WBST_ADRS_TXT  AS Website ,
+						    CNTXT.LANG_CD        AS Language ,
+						    CNTXT.ST_CD          AS State ,
+						    CNTXT.CNTY_CD        AS County ,
+						    CNTXT.CITY_NM        AS City ,
+						    CNTXT.PLAN_TYPE_CD   AS PlanType ,
+						    CNTXT.PLAN_YEAR      AS YEAR ,
+						    CNTXT.PROD_CD        AS Product ,
+						    CNTXT.BRND_CD        AS Brand ,
+						    CNTXT.LOB_CD         AS LOB ,
+						    CNTXT.CHNL_CD        AS Channel ,
+						    CNTXT.VNDR_CD        AS Vendor ,
+						    CNTXT.USER_TYPE_CD   AS UserType ,
+						    CNTXT.SITE_TYPE_CD   AS SiteType ,
+						    CNTXT.PROD_FMLY_CD   AS ProductFamily ,
+						    CNTXT.PROV_PLAN_TXT  AS ProviderPlan ,
+						    CNTXT.CNTXT_ID       AS InstanceId ,
+						    CNTXT.PROV_SPCLTY_CD AS ProviderSpeciality ,
+						    'key'                AS AttributeName ,
+						    cmpnt_name.ATRB_VAL  AS AttributeValue
+						  FROM CMPNT CMPT
+						  
+						  INNER JOIN Cmpnt_atrb cmpnt_name
+						  ON CMPT.CMPNT_ID       = cmpnt_name.CMPNT_ID
+						  AND cmpnt_name.ATRB_NM = 'key'
+						  AND UPPER(cmpnt_name.ATRB_VAL) = UPPER(?)
+						  
+						  INNER JOIN CNTXT CNTXT
+						  ON CNTXT.CMPNT_ID          = CMPT.CMPNT_ID
+						  AND (CNTXT.VISUAL_ROLE_CD  = ?
+						  OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+						  AND (CNTXT.ST_CD           = ?
+						  OR CNTXT.ST_CD            IS NULL)
+						  AND (CNTXT.CNTY_CD         = ?
+						  OR CNTXT.CNTY_CD          IS NULL)
+						  AND (CNTXT.CITY_NM         = ?
+						  OR CNTXT.CITY_NM          IS NULL)
+						  AND (CNTXT.PLAN_TYPE_CD    = ?
+						  OR CNTXT.PLAN_TYPE_CD     IS NULL)
+						  AND (CNTXT.PLAN_YEAR       = ?
+						  OR CNTXT.PLAN_YEAR        IS NULL)
+						  AND (CNTXT.PROD_CD         = ?
+						  OR CNTXT.PROD_CD          IS NULL )
+						  AND (CNTXT.BRND_CD         = ?
+						  OR CNTXT.BRND_CD          IS NULL)
+						  AND (CNTXT.WBST_ADRS_TXT   = ? )
+						  AND (CNTXT.LANG_CD         = ?
+						  OR CNTXT.LANG_CD          IS NULL)
+						  AND (CNTXT.LOB_CD          = ?
+						  OR CNTXT.LOB_CD           IS NULL)
+						  AND (CNTXT.CHNL_CD         = ?
+						  OR CNTXT.CHNL_CD          IS NULL)
+						  AND (CNTXT.VNDR_CD         = ?
+						  OR CNTXT.VNDR_CD          IS NULL)
+						  AND (CNTXT.USER_TYPE_CD    = ?
+						  OR CNTXT.USER_TYPE_CD     IS NULL)
+						  AND (CNTXT.PROV_SPCLTY_CD  = ?
+						  OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+						  AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+						  AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+						  OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+						  AND (CNTXT.SITE_TYPE_CD    = ?
+						  OR CNTXT.SITE_TYPE_CD     IS NULL)
+						  AND (CNTXT.PROD_FMLY_CD    = ?
+						  OR CNTXT.PROD_FMLY_CD     IS NULL)
+						  AND (CNTXT.EXPIRY_DT      IS NULL
+						  OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+						  AND (CNTXT.USER_ROLE_CD    = ?
+						  OR CNTXT.USER_ROLE_CD     IS NULL)
+						  AND (CNTXT.ENTTLMNT_CD     = ?
+						  OR CNTXT.ENTTLMNT_CD      IS NULL)
+						  AND (CNTXT.PROV_PLAN_TXT   = ?
+						  OR CNTXT.PROV_PLAN_TXT    IS NULL)
+						  
+						  WHERE CMPT.CMPNT_TYPE_CD    = 'ENVIRONMENT'
+						  AND CMPT.CDI_STTS_CD      ='PUBLISHED'
+						  AND CMPT.CMS_STTS_CD      ='PUBLISHED'
+						  AND ((PBLSHD_DT           IS NOT NULL
+						  AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+						  OR PBLSHD_DT              IS NULL)
+						  
+						  ORDER BY WBST_ADRS_TXT DESC NULLS LAST,
+						    USER_ROLE_CD DESC NULLS LAST,
+						    ENTTLMNT_CD DESC NULLS LAST,
+						    USER_TYPE_CD DESC NULLS LAST,
+						    VISUAL_ROLE_CD DESC NULLS LAST,
+						    CHNL_CD DESC NULLS LAST,
+						    VNDR_CD DESC NULLS LAST,
+						    LOB_CD DESC NULLS LAST,
+						    ST_CD DESC NULLS LAST,
+						    BRND_CD DESC NULLS LAST,
+						    CNTY_CD DESC NULLS LAST,
+						    CITY_NM DESC NULLS LAST,
+						    PROV_SPCLTY_CD DESC NULLS LAST,
+						    PROD_FMLY_CD DESC NULLS LAST,
+						    PROD_CD DESC NULLS LAST,
+						    PLAN_TYPE_CD DESC NULLS LAST,
+						    PROV_PLAN_TXT DESC NULLS LAST,
+						    PLAN_YEAR DESC NULLS LAST,
+						    PLAN_EFCTV_DT DESC NULLS LAST,
+						    LANG_CD DESC NULLS LAST,
+						    SITE_TYPE_CD DESC NULLS LAST,
+						    EXPIRY_DT DESC NULLS LAST
+						  )
+						WHERE rownum=1
+				 ]]>
+			</value>
+		</property>
+		<property name="VerbiageComponentQuery">
+			<value>
+				<![CDATA[
+							SELECT *
+								FROM
+								  (SELECT CMPT.CMPNT_ID  AS ComponentId,
+								    CMPT.CNTNT_TXT       AS ContextText,
+								    CMPT.TTL_TXT		 AS TitleText,
+								    CMPT.CMPNT_TYPE_CD   AS ComponentType,
+								    CNTXT.VISUAL_ROLE_CD AS VisualRole ,
+								    CNTXT.WBST_ADRS_TXT  AS Website ,
+								    CNTXT.LANG_CD        AS Language ,
+								    CNTXT.ST_CD          AS State ,
+								    CNTXT.CNTY_CD        AS County ,
+								    CNTXT.CITY_NM        AS City ,
+								    CNTXT.PLAN_TYPE_CD   AS PlanType ,
+								    CNTXT.PLAN_YEAR      AS YEAR ,
+								    CNTXT.PROD_CD        AS Product ,
+								    CNTXT.BRND_CD        AS Brand ,
+								    CNTXT.LOB_CD         AS LOB ,
+								    CNTXT.CHNL_CD        AS Channel ,
+								    CNTXT.VNDR_CD        AS Vendor ,
+								    CNTXT.USER_TYPE_CD   AS UserType ,
+								    CNTXT.SITE_TYPE_CD   AS SiteType ,
+								    CNTXT.PROD_FMLY_CD   AS ProductFamily ,
+								    CNTXT.PROV_PLAN_TXT  AS ProviderPlan ,
+								    CNTXT.CNTXT_ID       AS InstanceId ,
+								    CNTXT.PROV_SPCLTY_CD AS ProviderSpeciality ,
+								    'key'                AS AttributeName ,
+								    cmpnt_name.ATRB_VAL  AS AttributeValue
+								  FROM CMPNT CMPT
+								  
+								  INNER JOIN Cmpnt_atrb cmpnt_name
+								  ON CMPT.CMPNT_ID        = cmpnt_name.CMPNT_ID
+								  AND cmpnt_name.ATRB_NM  = 'key'
+								  AND UPPER(cmpnt_name.ATRB_VAL) = UPPER(?)
+								  
+								  INNER JOIN CNTXT CNTXT
+								  ON CNTXT.CMPNT_ID          = CMPT.CMPNT_ID								  
+								  AND (CNTXT.VISUAL_ROLE_CD  = ?
+								  OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+								  AND (CNTXT.ST_CD           = ?
+								  OR CNTXT.ST_CD            IS NULL)
+								  AND (CNTXT.CNTY_CD         = ?
+								  OR CNTXT.CNTY_CD          IS NULL)
+								  AND (CNTXT.CITY_NM         = ?
+								  OR CNTXT.CITY_NM          IS NULL)
+								  AND (CNTXT.PLAN_TYPE_CD    = ?
+								  OR CNTXT.PLAN_TYPE_CD     IS NULL)
+								  AND (CNTXT.PLAN_YEAR       = ?
+								  OR CNTXT.PLAN_YEAR        IS NULL)
+								  AND (CNTXT.PROD_CD         = ?
+								  OR CNTXT.PROD_CD          IS NULL )
+								  AND (CNTXT.BRND_CD         = ?
+								  OR CNTXT.BRND_CD          IS NULL)
+								  AND (CNTXT.WBST_ADRS_TXT   = ? )
+								  AND (CNTXT.LANG_CD         = ?
+								  OR CNTXT.LANG_CD          IS NULL)
+								  AND (CNTXT.LOB_CD          = ?
+								  OR CNTXT.LOB_CD           IS NULL)
+								  AND (CNTXT.CHNL_CD         = ?
+								  OR CNTXT.CHNL_CD          IS NULL)
+								  AND (CNTXT.VNDR_CD         = ?
+								  OR CNTXT.VNDR_CD          IS NULL)
+								  AND (CNTXT.USER_TYPE_CD    = ?
+								  OR CNTXT.USER_TYPE_CD     IS NULL)
+								  AND (CNTXT.PROV_SPCLTY_CD  = ?
+								  OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+								  AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+								  AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+								  OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+								  AND (CNTXT.SITE_TYPE_CD    = ?
+								  OR CNTXT.SITE_TYPE_CD     IS NULL)
+								  AND (CNTXT.PROD_FMLY_CD    = ?
+								  OR CNTXT.PROD_FMLY_CD     IS NULL)
+								  AND (CNTXT.EXPIRY_DT      IS NULL
+								  OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+								  AND (CNTXT.USER_ROLE_CD    = ?
+								  OR CNTXT.USER_ROLE_CD     IS NULL)
+								  AND (CNTXT.ENTTLMNT_CD     = ?
+								  OR CNTXT.ENTTLMNT_CD      IS NULL)
+								  AND (CNTXT.PROV_PLAN_TXT   = ?
+								  OR CNTXT.PROV_PLAN_TXT    IS NULL)
+								  
+								  WHERE CMPT.CMPNT_TYPE_CD     = 'VERBIAGE'
+								  AND CMPT.CDI_STTS_CD       ='PUBLISHED'
+								  AND CMPT.CMS_STTS_CD       ='PUBLISHED'
+								  AND ((PBLSHD_DT           IS NOT NULL
+								  AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+								  OR PBLSHD_DT              IS NULL)
+								  
+								  ORDER BY WBST_ADRS_TXT DESC NULLS LAST,
+								    USER_ROLE_CD DESC NULLS LAST,
+								    ENTTLMNT_CD DESC NULLS LAST,
+								    USER_TYPE_CD DESC NULLS LAST,
+								    VISUAL_ROLE_CD DESC NULLS LAST,
+								    CHNL_CD DESC NULLS LAST,
+								    VNDR_CD DESC NULLS LAST,
+								    LOB_CD DESC NULLS LAST,
+								    ST_CD DESC NULLS LAST,
+								    BRND_CD DESC NULLS LAST,
+								    CNTY_CD DESC NULLS LAST,
+								    CITY_NM DESC NULLS LAST,
+								    PROV_SPCLTY_CD DESC NULLS LAST,
+								    PROD_FMLY_CD DESC NULLS LAST,
+								    PROD_CD DESC NULLS LAST,
+								    PLAN_TYPE_CD DESC NULLS LAST,
+								    PROV_PLAN_TXT DESC NULLS LAST,
+								    PLAN_YEAR DESC NULLS LAST,
+								    PLAN_EFCTV_DT DESC NULLS LAST,
+								    LANG_CD DESC NULLS LAST,
+								    SITE_TYPE_CD DESC NULLS LAST,
+								    EXPIRY_DT DESC NULLS LAST
+								  )
+								WHERE rownum=1
+				 ]]>
+			</value>
+		</property>
+		<property name="ValidatorComponentQuery">
+			<value>
+				<![CDATA[
+						SELECT *
+							FROM
+							  (SELECT CMPT.CMPNT_ID  AS ComponentId,
+							    CMPT.CNTNT_TXT       AS ContextText,
+							    CMPT.TTL_TXT		 AS TitleText,
+							    CMPT.CMPNT_TYPE_CD   AS ComponentType,
+							    CNTXT.VISUAL_ROLE_CD AS VisualRole ,
+							    CNTXT.WBST_ADRS_TXT  AS Website ,
+							    CNTXT.LANG_CD        AS Language ,
+							    CNTXT.ST_CD          AS State ,
+							    CNTXT.CNTY_CD        AS County ,
+							    CNTXT.CITY_NM        AS City ,
+							    CNTXT.PLAN_TYPE_CD   AS PlanType ,
+							    CNTXT.PLAN_YEAR      AS YEAR ,
+							    CNTXT.PROD_CD        AS Product ,
+							    CNTXT.BRND_CD        AS Brand ,
+							    CNTXT.LOB_CD         AS LOB ,
+							    CNTXT.CHNL_CD        AS Channel ,
+							    CNTXT.VNDR_CD        AS Vendor ,
+							    CNTXT.USER_TYPE_CD   AS UserType ,
+							    CNTXT.SITE_TYPE_CD   AS SiteType ,
+							    CNTXT.PROD_FMLY_CD   AS ProductFamily ,
+							    CNTXT.PROV_PLAN_TXT  AS ProviderPlan ,
+							    CNTXT.PROV_SPCLTY_CD AS ProviderSpeciality ,
+							    CNTXT.CNTXT_ID       AS InstanceId ,
+							    'action'             AS AttributeName ,
+							    cmpnt_name.ATRB_VAL  AS AttributeValue
+							  FROM CMPNT CMPT
+							  
+							  INNER JOIN Cmpnt_atrb cmpnt_name
+							  ON CMPT.CMPNT_ID        = cmpnt_name.CMPNT_ID
+							  AND cmpnt_name.ATRB_NM  = 'action'
+							  AND UPPER(cmpnt_name.ATRB_VAL) = (?)
+							  
+							  INNER JOIN CNTXT CNTXT
+							  ON CNTXT.CMPNT_ID          = CMPT.CMPNT_ID
+							  AND (CNTXT.VISUAL_ROLE_CD  = ?
+							  OR CNTXT.VISUAL_ROLE_CD   IS NULL)
+							  AND (CNTXT.ST_CD           = ?
+							  OR CNTXT.ST_CD            IS NULL)
+							  AND (CNTXT.CNTY_CD         = ?
+							  OR CNTXT.CNTY_CD          IS NULL)
+							  AND (CNTXT.CITY_NM         = ?
+							  OR CNTXT.CITY_NM          IS NULL)
+							  AND (CNTXT.PLAN_TYPE_CD    = ?
+							  OR CNTXT.PLAN_TYPE_CD     IS NULL)
+							  AND (CNTXT.PLAN_YEAR       = ?
+							  OR CNTXT.PLAN_YEAR        IS NULL)
+							  AND (CNTXT.PROD_CD         = ?
+							  OR CNTXT.PROD_CD          IS NULL )
+							  AND (CNTXT.BRND_CD         = ?
+							  OR CNTXT.BRND_CD          IS NULL)
+							  AND (CNTXT.WBST_ADRS_TXT   = ? )
+							  AND (CNTXT.LANG_CD         = ?
+							  OR CNTXT.LANG_CD          IS NULL)
+							  AND (CNTXT.LOB_CD          = ?
+							  OR CNTXT.LOB_CD           IS NULL)
+							  AND (CNTXT.CHNL_CD         = ?
+							  OR CNTXT.CHNL_CD          IS NULL)
+							  AND (CNTXT.VNDR_CD         = ?
+							  OR CNTXT.VNDR_CD          IS NULL)
+							  AND (CNTXT.USER_TYPE_CD    = ?
+							  OR CNTXT.USER_TYPE_CD     IS NULL)
+							  AND (CNTXT.PROV_SPCLTY_CD  = ?
+							  OR CNTXT.PROV_SPCLTY_CD   IS NULL)
+							  AND ((CNTXT.PLAN_EFCTV_DT IS NOT NULL
+							  AND CNTXT.PLAN_EFCTV_DT   <= CURRENT_TIMESTAMP)
+							  OR CNTXT.PLAN_EFCTV_DT    IS NULL)
+							  AND (CNTXT.SITE_TYPE_CD    = ?
+							  OR CNTXT.SITE_TYPE_CD     IS NULL)
+							  AND (CNTXT.PROD_FMLY_CD    = ?
+							  OR CNTXT.PROD_FMLY_CD     IS NULL)
+							  AND (CNTXT.EXPIRY_DT      IS NULL
+							  OR CNTXT.EXPIRY_DT        >= CURRENT_TIMESTAMP)
+							  AND (CNTXT.USER_ROLE_CD    = ?
+							  OR CNTXT.USER_ROLE_CD     IS NULL)
+							  AND (CNTXT.ENTTLMNT_CD     = ?
+							  OR CNTXT.ENTTLMNT_CD      IS NULL)
+							  AND (CNTXT.PROV_PLAN_TXT   = ?
+							  OR CNTXT.PROV_PLAN_TXT    IS NULL)
+							  
+							  WHERE CMPT.CMPNT_TYPE_CD     = 'VALIDATOR'
+							  AND CMPT.CDI_STTS_CD       ='PUBLISHED'
+							  AND CMPT.CMS_STTS_CD       ='PUBLISHED'
+							  AND ((PBLSHD_DT           IS NOT NULL
+							  AND PBLSHD_DT             <= CURRENT_TIMESTAMP)
+							  OR PBLSHD_DT              IS NULL)
+							  
+							  ORDER BY WBST_ADRS_TXT DESC NULLS LAST,
+							    USER_ROLE_CD DESC NULLS LAST,
+							    ENTTLMNT_CD DESC NULLS LAST,
+							    USER_TYPE_CD DESC NULLS LAST,
+							    VISUAL_ROLE_CD DESC NULLS LAST,
+							    CHNL_CD DESC NULLS LAST,
+							    VNDR_CD DESC NULLS LAST,
+							    LOB_CD DESC NULLS LAST,
+							    ST_CD DESC NULLS LAST,
+							    BRND_CD DESC NULLS LAST,
+							    CNTY_CD DESC NULLS LAST,
+							    CITY_NM DESC NULLS LAST,
+							    PROV_SPCLTY_CD DESC NULLS LAST,
+							    PROD_FMLY_CD DESC NULLS LAST,
+							    PROD_CD DESC NULLS LAST,
+							    PLAN_TYPE_CD DESC NULLS LAST,
+							    PROV_PLAN_TXT DESC NULLS LAST,
+							    PLAN_YEAR DESC NULLS LAST,
+							    PLAN_EFCTV_DT DESC NULLS LAST,
+							    LANG_CD DESC NULLS LAST,
+							    SITE_TYPE_CD DESC NULLS LAST,
+							    EXPIRY_DT DESC NULLS LAST
+							  )
+							WHERE rownum=1	
+				 ]]>
+			</value>
+		</property>
+		<property name="ccdiPropertyPlaceHolderQuery">
+			<value>
+			<![CDATA[select ATRB.ATRB_VAL, 
+							CMPNT.CNTNT_TXT , 
+              				CMPNT.CMPNT_TYPE_CD
+							from CMPNT CMPNT, 
+							CMPNT_ATRB ATRB 
+							WHERE 
+							CMPNT.CMPNT_ID = ATRB.CMPNT_ID AND 
+							CMS_STTS_CD='PUBLISHED' AND
+							CMPNT.CDI_STTS_CD='PUBLISHED' AND 
+							CMPNT.TTL_TXT like '%PLACEHOLDER_CONFIG%'
+				 ]]>
+			</value>
+		</property>
+		<property name="ccdiDataSource" ref="ccdiDataSource"></property>
+	</bean>
+
+
+	<bean
+		class="com.bits.ms.ccdi.support.CcdiPropertySourcesPlaceholderConfigurer">
+		<property value="${" name="placeholderPrefix" />
+		<property value="}" name="placeholderSuffix" />
+	</bean>
+
+</beans>
+<!--Ended DAO configuration file for CcdiSelectorDao class -->  

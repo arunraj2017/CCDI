@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Started Spring Integration configuration file for CCDI Service layer -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:oxm="http://www.springframework.org/schema/oxm"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-3.0.xsd		
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+		http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+	<!-- Request and Response channels used for CCDI integration -->
+	<int:channel id="cdiAdminRequestChannel" />
+	<int:channel id="cdiAdminResponseChannel" />
+	<int:channel id="cdiRequestChannel" />
+	<int:channel id="cacheOutputChannel" />
+	<int:channel id="repoRequestChannel" />
+	<int:channel id="cdiResponseChannel" />
+
+
+	<!-- Gateway interface to get the ccdi response for the ccdi request. -->
+	<int:gateway id="ccdiServiceGate" service-interface="com.bits.ms.ccdi.api.integ.srvcs.CcdiService"
+		error-channel="ccdi-service-error-channel">
+
+		<int:method name="getComponent" request-channel="cdiRequestChannel"
+			reply-channel="cdiResponseChannel" />
+		<!-- <int:method name="manageCcdiComponents" request-channel="cdiAdminRequestChannel"
+			reply-channel="cdiAdminResponseChannel" /> -->
+
+	</int:gateway>
+
+	<!-- Check in cache if ccdi response object is available -->
+	<int:service-activator ref="cacheServiceActivator"
+		method="get" input-channel="cdiRequestChannel" output-channel="cacheOutputChannel" />
+
+
+	<!-- Router configuration - The ccdi response object will be retrieved from 
+		cache if it is available else will be fetched from database based the ccdi 
+		request -->
+	<int:payload-type-router id="cacheContentRouter"
+		input-channel="cacheOutputChannel">
+		<int:mapping type="com.bits.ms.ccdi.api.io.CcdiRequest"
+			channel="repoRequestChannel" />
+		<int:mapping type="com.bits.ms.ccdi.api.io.CcdiResponse"
+			channel="cdiResponseChannel" />
+	</int:payload-type-router>
+
+
+	<!-- Used to retrieve the content from repository based on the content type -->
+	<int:chain input-channel="repoRequestChannel" output-channel="cdiResponseChannel">
+		<int:service-activator ref="ccdiApiRepositoryActivator"
+			method="getComponent" />
+		<int:service-activator ref="cacheServiceActivator"
+			method="put" />
+	</int:chain>
+	
+	
+	<!--JNDI mappings for all the components -->
+	<util:map id="jndiMapping"  map-class="java.util.HashMap" 
+          key-type="java.lang.String" value-type="java.lang.String">
+				<entry key="GENERIC" value="ccdiGenericContentCache" />
+				<entry key="PROPERTY" value="ccdiPropertyCache" />
+				<entry key="ENVIRONMENT" value="ccdiEnvCache" />
+				<entry key="VERBIAGE" value="ccdiVerbiageCache" />
+				<entry key="GATEWAY" value="ccdiGatewayCache" />
+				<entry key="VALIDATOR" value="ccdiValidatorCache" />
+				<entry key="GLOSSARY" value="ccdiGlossaryCache" />
+	</util:map>
+	<!-- FactoryBean that looks up a Generic component JNDI object -->
+	<bean id="ccdiGenericContentCache" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="cache/ccdiGenericContentCache" />
+	</bean>
+	<!-- FactoryBean that looks up a Property component JNDI object -->
+	<bean id="ccdiPropertyCache" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="cache/ccdiPropertyCache" />
+	</bean>
+	<!-- FactoryBean that looks up a Environment component JNDI object -->
+	<bean id="ccdiEnvCache" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="cache/ccdiEnvCache" />
+	</bean>
+	<!-- FactoryBean that looks up a Verbiage component JNDI object -->
+	<bean id="ccdiVerbiageCache" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="cache/ccdiVerbiageCache" />
+	</bean>
+	<!-- FactoryBean that looks up a Gateway component JNDI object -->
+	<bean id="ccdiGatewayCache" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="cache/ccdiGatewayCache" />
+	</bean>
+	<!-- FactoryBean that looks up a Validator component JNDI object -->
+	<bean id="ccdiValidatorCache" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="cache/ccdiValidatorCache" />
+	</bean>
+	<!-- FactoryBean that looks up a Glossary component JNDI object -->
+	<bean id="ccdiGlossaryCache" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="cache/ccdiGlossaryCache" />
+	</bean>
+
+
+</beans>
+	

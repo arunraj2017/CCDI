@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://dozer.sourceforge.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://dozer.sourceforge.net
+          http://dozer.sourceforge.net/schema/beanmapping.xsd">
+		
+	<!--Started dozer mapping for Contexts class to ContentMetaData class -->      
+	
+	<mapping map-null="false">
+		<class-a>
+			com.bits.ms.ccdi.entity.cntxt.Contexts
+		</class-a>
+		<class-b>
+			com.bits.ms.ccdi.entities.cntxt.ContextMetaData
+		</class-b>
+		<field>
+			<a>businessContext.visualRole</a>
+			<b>visualRole</b>
+		</field>	
+		<field>
+			<a>businessContext.state</a>
+			<b>state</b>
+		</field>	
+		<field>
+			<a>businessContext.county</a>
+			<b>county</b>
+		</field>	
+		<field>
+			<a>businessContext.city</a>
+			<b>city</b>
+		</field>	
+		<field>
+			<a>businessContext.planType</a>
+			<b>planType</b>
+		</field>	
+		<field>
+			<a>businessContext.planYear</a>
+			<b>planYear</b>
+		</field>	
+		<field>
+			<a>businessContext.productCode</a>
+			<b>productCode</b>
+		</field>	
+		<field>
+			<a>businessContext.brand</a>
+			<b>brand</b>
+		</field>	
+		<field>
+			<a>businessContext.name</a>
+			<b>site</b>
+		</field>	
+		<field>
+			<a>businessContext.vendor</a>
+			<b>vendor</b>
+		</field>	
+		<field>
+			<a>businessContext.portFolio</a>
+			<b>providerSpeciality</b>
+		</field>	
+		<field>
+			<a>businessContext.channel</a>
+			<b>channel</b>
+		</field>	
+		<field>
+			<a>businessContext.planEffectiveDate</a>
+			<b>planEffectiveDate</b>
+		</field>	
+		<field>
+			<a>businessContext.lob</a>
+			<b>lob</b>
+		</field>	
+		<field>
+			<a>businessContext.siteDomain</a>
+			<b>siteType</b>
+		</field>	
+		<field>
+			<a>businessContext.productFamily</a>
+			<b>productFamily</b>
+		</field>	
+		<field>
+			<a>businessContext.expiryDate</a>
+			<b>expiryDate</b>
+		</field>	
+		<field>
+			<a>businessContext.providerPlan</a>
+			<b>providerPlan</b>
+		</field>	
+		<field>
+			<a>userContext.userPreferences</a>
+			<b>language</b>
+		</field>	
+		<field>
+			<a>userContext.userType</a>
+			<b>userType</b>
+		</field>	
+		<field>
+			<a>userContext.userRole</a>
+			<b>userRole</b>
+		</field>	
+		<field>
+			<a>userContext.entitlement</a>
+			<b>entitlement</b>
+		</field>	
+	</mapping>
+	
+	<!-- Ended dozer mapping for Contexts class to ContentMetaData class --> 
+
+</mappings>

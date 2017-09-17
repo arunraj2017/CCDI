@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Place holder for all the Test CCDI related configuration files -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:oxm="http://www.springframework.org/schema/oxm"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/integration
+		http://www.springframework.org/schema/integration/spring-integration-3.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+		http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	<context:annotation-config />
+	<context:component-scan base-package="com.bits.ms" />
+	<import resource="ccdi-integration-context-test.xml" />
+	<import resource="ccdi-dao-config-test.xml" />
+	<!-- <import resource="ccdi-admin-dao-config-test.xml" />
+	<import resource="classpath:spring/core-root-context.xml" />   -->
+
+	<!-- Start of Error Handling -->
+	<int:channel id="ccdi-service-error-channel" />
+
+	<int:chain input-channel="ccdi-service-error-channel"
+		output-channel="nullChannel">
+		<int:transformer ref="errorUnwrapper.cdiapi" />
+		<int:service-activator ref="errorHandler.cdiapi"
+			method="onError" />
+	</int:chain>
+	<!-- Bean class that transforms the error message to ServiceException. -->
+	<bean id="errorUnwrapper.cdiapi" class="com.bits.ms.ccdi.integ.exception.CcdiApiErrorUnwrapper" />
+	<!-- Bean class to handle the exceptions. -->
+	<bean id="errorHandler.cdiapi" class="com.bits.ms.ccdi.integ.exception.CcdiApiErrorHandler" />
+	<!--End of Error Handling -->
+	<!-- Start of Bean class for Dozer Mapping files -->
+	<bean id="dozer.mapper.ccdiapi" class="org.dozer.DozerBeanMapper">
+		<property name="mappingFiles">
+			<list>
+				<value>dozer/ccdi-dozer-mapping.xml</value>
+				<value>dozer/contexts-contextMetaData.xml</value>
+			</list>
+		</property>
+	</bean>
+	<!-- End of Bean class for Dozer Mapping files -->
+
+</beans>

@@ -1,0 +1,19 @@
+<!DOCTYPE taglib
+  PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN"
+   "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+
+<!-- a tab library descriptor -->
+<taglib xmlns="http://java.sun.com/JSP/TagLibraryDescriptor">
+	<tlib-version>1.0</tlib-version>
+	<jsp-version>2.0</jsp-version>
+	<short-name>env tld</short-name>
+	<tag>
+		<name>env</name>
+		<tag-class>com.bits.ms.ccdi.api.tglib.EnvironmentTaglib</tag-class>
+		<body-content>scriptless</body-content>
+		<attribute>
+			<name>message</name>
+		</attribute>
+	</tag>
+
+</taglib>
